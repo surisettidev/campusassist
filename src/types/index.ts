@@ -1,21 +1,31 @@
 // Type definitions for IFHE Campus Assistant Portal
 
 export interface CloudflareBindings {
-  // Environment variables will be available here
+  // AI API Keys
   GEMINI_API_KEY?: string;
   GROQ_API_KEY?: string;
   OPENROUTER_API_KEY?: string;
+  
+  // Google Services
   GOOGLE_SHEET_ID?: string;
   GOOGLE_SERVICE_ACCOUNT_EMAIL?: string;
   GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?: string;
+  GOOGLE_API_KEY?: string;
+  GOOGLE_CSE_ID?: string;
+  GOOGLE_CSE_API_KEY?: string;
+  GOOGLE_APPS_SCRIPT_URL?: string;
+  
+  // Authentication
   ADMIN_API_KEY?: string;
+  
+  // Email Configuration
   SMTP_HOST?: string;
   SMTP_PORT?: string;
   SMTP_USER?: string;
   SMTP_PASS?: string;
+  
+  // Application Configuration
   APP_BASE_URL?: string;
-  GOOGLE_CSE_ID?: string;
-  GOOGLE_CSE_API_KEY?: string;
 }
 
 export interface ChatRequest {

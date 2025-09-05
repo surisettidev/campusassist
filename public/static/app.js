@@ -589,6 +589,11 @@ async function adminLogin() {
         
         if (response.data.success) {
             AppState.adminToken = response.data.token;
+            
+            // Store token in localStorage for persistence
+            localStorage.setItem('adminToken', response.data.token);
+            localStorage.setItem('adminTokenExpiry', Date.now() + (24 * 60 * 60 * 1000)); // 24 hours
+            
             showToast('Admin login successful!', 'success');
             loadAdminDashboard();
         } else {
@@ -606,6 +611,22 @@ async function adminLogin() {
     } finally {
         hideLoading();
     }
+}
+
+// Check for stored admin token on page load
+function checkStoredAdminToken() {
+    const token = localStorage.getItem('adminToken');
+    const expiry = localStorage.getItem('adminTokenExpiry');
+    
+    if (token && expiry && Date.now() < parseInt(expiry)) {
+        AppState.adminToken = token;
+        return true;
+    }
+    
+    // Clean up expired token
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminTokenExpiry');
+    return false;
 }
 
 async function loadAdminDashboard() {
@@ -828,9 +849,19 @@ async function loadSystemStatus() {
 
 function adminLogout() {
     AppState.adminToken = null;
-    document.getElementById('admin-login').classList.remove('hidden');
-    document.getElementById('admin-dashboard').classList.add('hidden');
-    document.getElementById('admin-api-key').value = '';
+    
+    // Clear stored token
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminTokenExpiry');
+    
+    const loginDiv = document.getElementById('admin-login');
+    const dashboardDiv = document.getElementById('admin-dashboard');
+    const apiKeyInput = document.getElementById('admin-api-key');
+    
+    if (loginDiv) loginDiv.classList.remove('hidden');
+    if (dashboardDiv) dashboardDiv.classList.add('hidden');
+    if (apiKeyInput) apiKeyInput.value = '';
+    
     showToast('Logged out successfully', 'info');
 }
 
@@ -872,6 +903,18 @@ document.addEventListener('DOMContentLoaded', function() {
         chatSend.addEventListener('click', sendChatMessage);
         
         // Initialize with home section
+        showSection('home');
+    }
+    
+    // Check for stored admin token (for admin-login page)
+    if (window.location.pathname === '/admin-login') {
+        if (checkStoredAdminToken()) {
+            setTimeout(() => loadAdminDashboard(), 100);
+        }
+    }
+    
+    // Initialize main page if not admin-login
+    if (window.location.pathname !== '/admin-login' && typeof showSection === 'function') {
         showSection('home');
     }
 });

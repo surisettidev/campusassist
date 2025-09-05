@@ -11,9 +11,15 @@ GOOGLE_SHEET_ID=your_google_sheet_id_here
 GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@project.iam.gserviceaccount.com
 GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n"
 
+# Google API Key (Alternative to service account)
+GOOGLE_API_KEY=your_google_api_key_here
+
 # Google Custom Search (Optional - for context)
 GOOGLE_CSE_ID=your_custom_search_engine_id
 GOOGLE_CSE_API_KEY=your_google_api_key_for_cse
+
+# Google Apps Script (Alternative to direct Sheets API)
+GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/your_script_id/exec
 
 # Admin Authentication
 ADMIN_API_KEY=your_secure_admin_api_key_here

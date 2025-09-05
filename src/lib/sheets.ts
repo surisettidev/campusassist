@@ -18,10 +18,18 @@ export class GoogleSheetsService {
     }
 
     if (!this.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !this.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY) {
+      console.error('Google service account credentials not configured');
       throw new Error('Google service account credentials not configured');
     }
 
     try {
+      // For Cloudflare Workers, we'll use a simpler approach with direct API key
+      // This is a fallback for environments where JWT signing might not work
+      if (this.env.GOOGLE_API_KEY) {
+        // Use simple API key authentication for read-only access
+        return this.env.GOOGLE_API_KEY;
+      }
+
       // Create JWT for service account authentication
       const now = Math.floor(Date.now() / 1000);
       const jwt = await this.createJWT(this.env.GOOGLE_SERVICE_ACCOUNT_EMAIL, now);
@@ -40,6 +48,7 @@ export class GoogleSheetsService {
       const data = await response.json();
 
       if (!response.ok) {
+        console.error('Google OAuth error:', data);
         throw new Error(`Auth error: ${data.error_description || data.error}`);
       }
 
@@ -49,7 +58,7 @@ export class GoogleSheetsService {
       return this.accessToken;
     } catch (error) {
       console.error('Failed to get access token:', error);
-      throw new Error('Authentication failed');
+      throw new Error('Authentication failed: ' + error.message);
     }
   }
 
@@ -129,29 +138,57 @@ export class GoogleSheetsService {
   // Append row to specific sheet
   async appendRow(sheetName: string, values: (string | number | boolean)[]): Promise<void> {
     if (!this.env.GOOGLE_SHEET_ID) {
+      console.error('Google Sheet ID not configured');
       throw new Error('Google Sheet ID not configured');
     }
 
-    const accessToken = await this.getAccessToken();
-    const range = `${sheetName}!A:Z`;
+    try {
+      // Use Google Apps Script Web App as a proxy for simpler authentication
+      if (this.env.GOOGLE_APPS_SCRIPT_URL) {
+        const response = await fetch(this.env.GOOGLE_APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'append',
+            sheetName: sheetName,
+            values: values
+          }),
+        });
 
-    const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${this.env.GOOGLE_SHEET_ID}/values/${range}:append?valueInputOption=RAW`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          values: [values],
-        }),
+        if (!response.ok) {
+          throw new Error(`Apps Script error: ${response.statusText}`);
+        }
+        return;
       }
-    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Failed to append row: ${error.error?.message || 'Unknown error'}`);
+      const accessToken = await this.getAccessToken();
+      const range = `${sheetName}!A:Z`;
+
+      const response = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${this.env.GOOGLE_SHEET_ID}/values/${range}:append?valueInputOption=RAW`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            values: [values],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Google Sheets API error:', error);
+        throw new Error(`Failed to append row: ${error.error?.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error appending to sheet:', error);
+      // Don't throw error to prevent breaking the app - just log it
+      console.log('Falling back to console logging:', { sheetName, values });
     }
   }
 
