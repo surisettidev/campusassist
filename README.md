@@ -52,7 +52,8 @@ The portal implements a robust AI system with automatic fallback:
 3. **Hidden Trigger**: Invisible clickable area (bottom-left corner)
 
 ### Admin Features
-- **Secure Authentication**: API key-based login system
+- **Secure Authentication**: API key-based login system (default: `Ifhe@ai`)
+- **Password Management**: Change admin password from dashboard
 - **Dashboard Analytics**: Real-time usage statistics and metrics
 - **Content Management**: Create/manage events and notices
 - **Chat Monitoring**: View conversation logs and AI performance
@@ -109,8 +110,8 @@ The portal implements a robust AI system with automatic fallback:
    GOOGLE_SERVICE_ACCOUNT_EMAIL=service@project.iam.gserviceaccount.com
    GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
    
-   # Admin & Email
-   ADMIN_API_KEY=your_secure_admin_key
+   # Admin & Email  
+   ADMIN_API_KEY=Ifhe@ai  # Default admin password (change after first login)
    SMTP_HOST=smtp.gmail.com
    SMTP_USER=your_email
    SMTP_PASS=app_password
@@ -154,6 +155,7 @@ The portal implements a robust AI system with automatic fallback:
 
 ### Admin APIs (Authentication Required)
 - `POST /api/admin/login` - Admin authentication
+- `POST /api/admin/change-password` - Change admin password
 - `GET /api/admin/dashboard` - Analytics dashboard
 - `GET /api/admin/chat-logs` - Conversation monitoring
 - `GET /api/admin/system-status` - Health monitoring
@@ -225,10 +227,16 @@ The portal implements a robust AI system with automatic fallback:
 
 ### Admin Features
 - **Dashboard**: Real-time analytics and usage statistics
+- **Password Management**: Change admin password securely from dashboard
 - **Events**: Create, edit, and manage campus events
 - **Notices**: Publish announcements and important updates
 - **Chat Logs**: Monitor AI conversations and performance
 - **System Status**: Check API health and service status
+
+### Default Admin Credentials
+- **Password**: `Ifhe@ai`
+- **Change Password**: Use the "Change Password" button in admin dashboard
+- **Security Note**: After changing password, update ADMIN_API_KEY in Cloudflare Pages environment variables
 
 ## 📈 Analytics & Monitoring
 

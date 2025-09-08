@@ -708,6 +708,9 @@ async function loadAdminDashboard() {
                 <button onclick="loadSystemStatus()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
                     <i class="fas fa-heartbeat mr-2"></i>System Status
                 </button>
+                <button onclick="showChangePassword()" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                    <i class="fas fa-key mr-2"></i>Change Password
+                </button>
                 <button onclick="adminLogout()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                     <i class="fas fa-sign-out-alt mr-2"></i>Logout
                 </button>
@@ -842,6 +845,111 @@ async function loadSystemStatus() {
     } catch (error) {
         console.error('Load system status error:', error);
         showToast('Failed to load system status', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function showChangePassword() {
+    if (!AppState.adminToken) return;
+    
+    const dashboardDiv = document.getElementById('admin-dashboard');
+    dashboardDiv.innerHTML = `
+        <div class="mb-4">
+            <button onclick="loadAdminDashboard()" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </button>
+        </div>
+        <div class="admin-card max-w-md mx-auto">
+            <h3 class="text-lg font-semibold mb-4">Change Admin Password</h3>
+            <form id="change-password-form" onsubmit="changeAdminPassword(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                    <input type="password" id="current-password" name="current_password" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Enter current password">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                    <input type="password" id="new-password" name="new_password" required minlength="6"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Enter new password (min. 6 characters)">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                    <input type="password" id="confirm-password" name="confirm_password" required minlength="6"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Confirm new password">
+                </div>
+                <div class="text-sm text-gray-600 mb-4 p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>
+                    After changing the password, you'll need to update the ADMIN_API_KEY environment variable in Cloudflare Pages.
+                </div>
+                <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-key mr-2"></i>Change Password
+                </button>
+            </form>
+        </div>
+    `;
+}
+
+async function changeAdminPassword(event) {
+    event.preventDefault();
+    
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+    }
+    
+    // Validate password length
+    if (newPassword.length < 6) {
+        showToast('New password must be at least 6 characters long', 'error');
+        return;
+    }
+    
+    // Check if new password is different
+    if (currentPassword === newPassword) {
+        showToast('New password must be different from current password', 'error');
+        return;
+    }
+    
+    showLoading('Changing password...');
+    
+    try {
+        const response = await axios.post(`${API_BASE}/admin/change-password`, {
+            current_password: currentPassword,
+            new_password: newPassword
+        }, {
+            headers: {
+                'Authorization': `Bearer ${AppState.adminToken}`
+            }
+        });
+        
+        if (response.data.success) {
+            showToast('Password change requested successfully!', 'success');
+            showToast('Remember to update the ADMIN_API_KEY environment variable', 'info');
+            
+            // Go back to dashboard after a delay
+            setTimeout(() => {
+                loadAdminDashboard();
+            }, 2000);
+        } else {
+            throw new Error(response.data.error || 'Password change failed');
+        }
+    } catch (error) {
+        console.error('Change password error:', error);
+        let errorMessage = 'Failed to change password';
+        
+        if (error.response && error.response.data) {
+            errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+        }
+        
+        showToast(errorMessage, 'error');
     } finally {
         hideLoading();
     }

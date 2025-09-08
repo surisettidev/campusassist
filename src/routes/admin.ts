@@ -338,6 +338,59 @@ admin.get('/analytics', async (c) => {
   }
 });
 
+// POST /api/admin/change-password - Change admin API key
+admin.post('/change-password', async (c) => {
+  try {
+    const body = await c.req.json();
+    
+    const validationErrors = [
+      validateRequired(body.current_password, 'current_password'),
+      validateRequired(body.new_password, 'new_password'),
+    ].filter(Boolean);
+
+    if (validationErrors.length > 0) {
+      return c.json({ 
+        error: 'Validation failed',
+        details: validationErrors
+      }, 400);
+    }
+
+    // Validate new password requirements
+    if (body.new_password.length < 6) {
+      return c.json({ 
+        error: 'New password must be at least 6 characters long'
+      }, 400);
+    }
+
+    if (body.new_password === body.current_password) {
+      return c.json({ 
+        error: 'New password must be different from current password'
+      }, 400);
+    }
+
+    const authService = new AuthService(c.env);
+    const success = await authService.changeAdminApiKey(body.current_password, body.new_password);
+
+    if (!success) {
+      return c.json({ 
+        error: 'Invalid current password'
+      }, 401);
+    }
+
+    return c.json({
+      success: true,
+      message: 'Password change requested successfully',
+      note: 'Update the ADMIN_API_KEY environment variable in Cloudflare Pages to complete the change'
+    });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    return c.json({ 
+      error: 'Failed to change password'
+    }, 500);
+  }
+});
+
 // POST /api/admin/test-email - Test email configuration
 admin.post('/test-email', async (c) => {
   try {

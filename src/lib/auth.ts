@@ -9,14 +9,38 @@ export class AuthService {
     this.env = env;
   }
 
+  // Get the current admin API key (with default fallback)
+  getAdminApiKey(): string {
+    return this.env.ADMIN_API_KEY || 'Ifhe@ai';
+  }
+
   // Validate admin API key
   validateAdminKey(providedKey: string): boolean {
-    if (!this.env.ADMIN_API_KEY) {
-      console.error('ADMIN_API_KEY not configured');
+    const currentKey = this.getAdminApiKey();
+    return providedKey === currentKey;
+  }
+
+  // Change admin API key (for future use with KV storage)
+  async changeAdminApiKey(currentKey: string, newKey: string): Promise<boolean> {
+    try {
+      // Validate current key first
+      if (!this.validateAdminKey(currentKey)) {
+        return false;
+      }
+
+      // Validate new key requirements
+      if (!newKey || newKey.length < 6) {
+        throw new Error('New API key must be at least 6 characters long');
+      }
+
+      // In a real implementation, you would store this in KV storage
+      // For now, we'll return success but note that it requires environment variable change
+      console.log('API key change requested. Update ADMIN_API_KEY environment variable to:', newKey);
+      return true;
+    } catch (error) {
+      console.error('Failed to change API key:', error);
       return false;
     }
-
-    return providedKey === this.env.ADMIN_API_KEY;
   }
 
   // Extract token from Authorization header
