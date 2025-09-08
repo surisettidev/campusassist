@@ -718,8 +718,37 @@ async function loadAdminDashboard() {
         `;
     } catch (error) {
         console.error('Load dashboard error:', error);
-        showToast('Failed to load admin dashboard', 'error');
-        adminLogout();
+        
+        // Only logout on authentication errors (401)
+        if (error.response && error.response.status === 401) {
+            showToast('Session expired. Please login again.', 'error');
+            adminLogout();
+        } else {
+            // For other errors, show fallback dashboard
+            showToast('Dashboard data unavailable, showing basic view', 'warning');
+            
+            dashboardDiv.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-2xl text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Dashboard Temporarily Unavailable</h3>
+                    <p class="text-gray-600 mb-6">Some features may not be accessible right now.</p>
+                    
+                    <div class="flex flex-wrap gap-4 justify-center">
+                        <button onclick="loadAdminDashboard()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-refresh mr-2"></i>Retry
+                        </button>
+                        <button onclick="showChangePassword()" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                            <i class="fas fa-key mr-2"></i>Change Password
+                        </button>
+                        <button onclick="adminLogout()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
     }
 }
 

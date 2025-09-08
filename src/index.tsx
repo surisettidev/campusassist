@@ -58,7 +58,7 @@ app.get('/admin-login', (c) => {
                 <p class="text-gray-600 mt-2">Campus Assistant Portal</p>
             </div>
             
-            <div class="space-y-6">
+            <div id="admin-login" class="space-y-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Admin API Key</label>
                     <input type="password" id="admin-api-key" placeholder="Enter your admin API key" 
@@ -70,7 +70,7 @@ app.get('/admin-login', (c) => {
                 </button>
             </div>
             
-            <div id="admin-dashboard" class="hidden mt-8">
+            <div id="admin-dashboard" class="hidden">
                 <!-- Admin dashboard will be loaded here -->
             </div>
         </div>
