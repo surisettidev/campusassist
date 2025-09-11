@@ -210,7 +210,8 @@ export class AIService {
     console.log('Processing question:', question);
     
     // Get context from campus website
-    const searchResults = await this.getCampusContext(question);
+    const searchResults: SearchResult[] = [];
+
     const context = searchResults.map(r => `${r.title}: ${r.snippet}`).join('\n');
 
     // Try each AI model in sequence
