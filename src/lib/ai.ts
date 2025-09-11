@@ -209,51 +209,26 @@ console.log("Search results raw:", JSON.stringify(data.items, null, 2));
 
   // Main function with fallback logic
   async answer(question: string): Promise<{ response: string; model: string; sourceLinks: SearchResult[] }> {
-    console.log('Processing question:', question);
-    
-    // Get context from campus website
-    const searchResults = await this.getCampusContext(question);
-    const context = searchResults.map(r => `${r.title}: ${r.snippet}`).join('\n');
+  const searchResults = await this.getCampusContext(question);
+  const context = searchResults.map(r => `${r.title}: ${r.snippet}`).join('\n');
 
-    // Try each AI model in sequence
-    let response: string | null = null;
-    let modelUsed = '';
+  let response: string | null = null;
+  let modelUsed = '';
 
-    console.log('Trying AI models in sequence...');
-
-    // Try Gemini first
-    response = await this.askGemini(question, context);
-    if (response) {
-      modelUsed = 'gemini-1.5-flash';
-    } else {
-      // Fallback to Groq
-      response = await this.askGroq(question, context);
-      if (response) {
-        modelUsed = 'llama-3.1-70b-versatile';
-      } else {
-        // Final fallback to OpenRouter
-        response = await this.askOpenRouter(question, context);
-        if (response) {
-          modelUsed = 'llama-3.1-8b-instruct';
-        }
-      }
-    }
-
-    // If all AI models fail, provide a helpful fallback response
-    if (!response) {
-      console.log('All AI models failed, using fallback response');
-      response = this.getFallbackResponse(question);
-      modelUsed = 'fallback';
-    }
-
-    console.log('Final response from:', modelUsed);
-
-    return {
-      response,
-      model: modelUsed,
-      sourceLinks: searchResults
-    };
+  if (context) {
+    // Draft response from context
+    response = await this.askGemini(question, context) 
+             || await this.askGroq(question, context)
+             || await this.askOpenRouter(question, context);
+    modelUsed = response ? modelUsed : 'fallback';
+  } else {
+    // No search results → fallback response
+    response = this.getFallbackResponse(question);
+    modelUsed = 'fallback';
   }
+
+  return { response, model: modelUsed, sourceLinks: searchResults };
+}
 
   // Get context from campus website (renamed from getIFHEContext)
   async getCampusContext(query: string): Promise<SearchResult[]> {
@@ -354,20 +329,20 @@ The campus staff will be able to provide you with specific, current information 
   }
 
     private getSystemPrompt(): string {
-    return `You are IFHE Campus Assistant, specializing in the **BBA program at ICFAI Foundation for Higher Education (IFHE Hyderabad)**.
+    return `You are IFHE Campus Assistant. Answer questions related to the campus, including:
 
-Your job:
-- Answer ONLY questions related to IFHE Hyderabad, its BBA program, admissions, fees, scholarships, placements, curriculum, faculty, campus life, and student services.
-- Always assume the user is asking specifically about IFHE Hyderabad BBA unless stated otherwise.
-- If you don’t know exact details, politely suggest checking IFHE’s official website or contacting the administration.
+- Admissions, programs, courses, and degrees
+- Faculty, staff, and achievements
+- Campus facilities, events, and student life
+- Fees, scholarships, and placements
+- Student services and administration
 
 Guidelines:
-1. Stay strictly on IFHE BBA topics — decline unrelated questions.
-2. Provide clear, concise, accurate responses.
-3. Include practical advice for prospective and current students.
-4. Use a friendly, professional, student-oriented tone.
-5. If asked about non-IFHE topics, reply with:  
-   "I’m specifically designed to help with questions about IFHE Hyderabad, its BBA program, and related student services. Please ask me about admissions, curriculum, fees, placements, or campus life."`;
+1. Use the provided context (search results) to answer questions.
+2. Only provide general advice if the context has no relevant information.
+3. Stay strictly on campus-related topics.
+4. If asked about unrelated topics, respond:
+"I'm designed to help with questions about IFHE Hyderabad and its campus. Please ask about admissions, programs, faculty, student services, or campus facilities."`;
   }
 
 
