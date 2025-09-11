@@ -30,6 +30,8 @@ export class AIService {
       return [];
     } catch (error) {
       console.error('Google CSE Error:', error);
+     console.log("Search results length:", data.items?.length || 0);
+console.log("Search results raw:", JSON.stringify(data.items, null, 2));
       return [];
     }
   }
@@ -210,8 +212,7 @@ export class AIService {
     console.log('Processing question:', question);
     
     // Get context from campus website
-    const searchResults: SearchResult[] = [];
-
+    const searchResults = await this.getCampusContext(question);
     const context = searchResults.map(r => `${r.title}: ${r.snippet}`).join('\n');
 
     // Try each AI model in sequence
