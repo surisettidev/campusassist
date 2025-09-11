@@ -209,8 +209,16 @@ console.log("Search results raw:", JSON.stringify(data.items, null, 2));
 
   // Main function with fallback logic
   async answer(question: string): Promise<{ response: string; model: string; sourceLinks: SearchResult[] }> {
+  // Fetch search results
   const searchResults = await this.getCampusContext(question);
+
+  // Debug logs for search results
+  console.log('Search results length:', searchResults.length);
+  console.log('Search results raw:', JSON.stringify(searchResults, null, 2));
+
+  // Convert results to context for AI
   const context = searchResults.map(r => `${r.title}: ${r.snippet}`).join('\n');
+  console.log('Search context for AI:', context);
 
   let response: string | null = null;
   let modelUsed = '';
@@ -220,7 +228,7 @@ console.log("Search results raw:", JSON.stringify(data.items, null, 2));
     response = await this.askGemini(question, context) 
              || await this.askGroq(question, context)
              || await this.askOpenRouter(question, context);
-    modelUsed = response ? modelUsed : 'fallback';
+    modelUsed = response ? 'ai model used' : 'fallback';
   } else {
     // No search results → fallback response
     response = this.getFallbackResponse(question);
