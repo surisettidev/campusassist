@@ -134,6 +134,7 @@ export class GoogleSheetsService {
     }
     return bytes.buffer;
   }
+console.log("Attempting to append to Google Sheet...");
 
   // Append row to specific sheet
   async appendRow(sheetName: string, values: (string | number | boolean)[]): Promise<void> {
