@@ -113,7 +113,7 @@ console.log("Search results raw:", JSON.stringify(data.items, null, 2));
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'llama-3.1-70b-versatile', // More reliable than deepseek
+          model: 'openai/gpt-oss-120b', // More reliable than deepseek
           messages: [
             {
               role: 'system',
@@ -169,7 +169,7 @@ console.log("Search results raw:", JSON.stringify(data.items, null, 2));
           'X-Title': 'Campus Assistant',
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-8b-instruct:free', // Free model
+          model: 'nvidia/llama-3.1-nemotron-ultra-253b-v1:free', // Free model
           messages: [
             {
               role: 'system',
